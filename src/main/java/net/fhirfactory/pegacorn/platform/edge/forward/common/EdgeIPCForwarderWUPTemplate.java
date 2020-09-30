@@ -25,11 +25,11 @@ package net.fhirfactory.pegacorn.platform.edge.forward.common;
 import net.fhirfactory.pegacorn.petasos.model.topology.EndpointElement;
 import net.fhirfactory.pegacorn.petasos.model.topology.NodeElement;
 import net.fhirfactory.pegacorn.petasos.model.topology.NodeElementTypeEnum;
-import net.fhirfactory.pegacorn.petasos.wup.archetypes.InteractAPICamelRestClientGatewayWUP;
+import net.fhirfactory.pegacorn.petasos.wup.archetypes.EdgeEgressMessagingGatewayWUP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class EdgeIPCForwarderWUPTemplate extends InteractAPICamelRestClientGatewayWUP {
+public abstract class EdgeIPCForwarderWUPTemplate extends EdgeEgressMessagingGatewayWUP {
     private static final Logger LOG = LoggerFactory.getLogger(EdgeIPCForwarderWUPTemplate.class);
 
     @Override
@@ -37,35 +37,6 @@ public abstract class EdgeIPCForwarderWUPTemplate extends InteractAPICamelRestCl
 
     }
 
-    @Override
-    protected String specifyEgressEndpointRESTProviderComponent() {
-        return("netty-http");
-    }
-
-    @Override
-    protected String specifyEgressEndpointPayloadEncapsulationType() {
-        return("http");
-    }
-
-    @Override
-    protected String specifyEgressEndpointScheme() {
-        return("https");
-    }
-
-    @Override
-    protected String specifyEgressEndpointContextPath() {
-        return("/pegacorn/ipc/edge/");
-    }
-
-    @Override
-    protected boolean isRemote(){
-        return(true);
-    }
-
-    @Override
-    protected String specifyEgressEndpointName() {
-        return(deriveTargetEndpointDetails());
-    }
 
     @Override
     protected String specifyEgressEndpointVersion() {
@@ -75,13 +46,7 @@ public abstract class EdgeIPCForwarderWUPTemplate extends InteractAPICamelRestCl
     @Override
     protected String specifyEgressEndpoint(){
         LOG.debug(".specifyEgressEndpoint(): Entry");
-        String egressEndPoint;
-        egressEndPoint = specifyEgressEndpointRESTProviderComponent();
-        egressEndPoint = egressEndPoint + ":";
-        egressEndPoint = egressEndPoint + this.specifyEgressEndpointPayloadEncapsulationType();
-        egressEndPoint = egressEndPoint + this.specifyEgressEndpointScheme();
-        egressEndPoint = egressEndPoint + this.deriveTargetEndpointDetails();
-        egressEndPoint = egressEndPoint + specifyEgressEndpointContextPath();
+        String egressEndPoint =  null;
         LOG.debug(".specifyIngresEndpoint(): Exit, egressEndPoint --> {}", egressEndPoint);
         return(egressEndPoint);
     }
