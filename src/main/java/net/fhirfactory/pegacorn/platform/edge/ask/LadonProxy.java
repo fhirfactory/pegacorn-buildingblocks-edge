@@ -21,34 +21,35 @@
  */
 package net.fhirfactory.pegacorn.platform.edge.ask;
 
-import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.rest.client.api.IGenericClient;
-import net.fhirfactory.pegacorn.deployment.topology.manager.DeploymentTopologyIM;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import net.fhirfactory.pegacorn.deployment.topology.manager.DeploymentTopologyIM;
+
 @ApplicationScoped
-public class LadonProxy {
+public class LadonProxy extends PegacornHapiFhirProxy {
     private static final Logger LOG = LoggerFactory.getLogger(LadonProxy.class);
 
-    FhirContext r4Context;
     String ladonAnswerEndpoint;
-    IGenericClient ladonClient;
 
     @Inject
     DeploymentTopologyIM topologyProxy;
 
     @PostConstruct
     public void initialise(){
-        this.r4Context = FhirContext.forR4();
         this.ladonAnswerEndpoint = buildLadonAnswerEndpoint();
-        this.ladonClient = r4Context.newRestfulGenericClient(getLadonAnswerEndpoint());
+        newRestfulGenericClient(getLadonAnswerEndpoint());
     }
 
+    @Override
+    protected Logger getLogger() {
+        return LOG;
+    }    
+    
     protected String buildLadonAnswerEndpoint(){
         String endpointString = new String();
 
@@ -58,9 +59,4 @@ public class LadonProxy {
     public String getLadonAnswerEndpoint(){
         return(this.ladonAnswerEndpoint);
     }
-
-    public IGenericClient getLadonClient(){
-        return(this.ladonClient);
-    }
-
 }
