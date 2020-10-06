@@ -85,7 +85,7 @@ public abstract class EdgeIPCForwarderWUPTemplate extends EdgeEgressMessagingGat
         getLogger().info("EdgeIPCForwarderWUPTemplate :: WUPEgressPoint/egressFeed --> {}", this.egressFeed());
 
         from(ingresFeed())
-                .routeId(getWupInstanceName()+"-Main")
+                .routeId(getNameSet().getRouteCoreWUP())
                 .log(LoggingLevel.INFO, "Incoming Raw Message --> ${body}")
                 .bean(InterProcessingPlantHandoverPacketGenerationBean.class, "constructInterProcessingPlantHandoverPacket(*,  Exchange," + this.getWupTopologyNodeElement().extractNodeKey() + ")")
                 .bean(InterProcessingPlantHandoverPacketEncoderBean.class, "handoverPacketEncode")
@@ -142,7 +142,7 @@ public abstract class EdgeIPCForwarderWUPTemplate extends EdgeEgressMessagingGat
 
     @Override
     protected String specifyEndpointProtocolLeadout() {
-        return ("?allowDefaultCodec=false&decoders=#ipcFrameDecoder&encoders=#encoders&keepAlive=true");
+        return ("?allowDefaultCodec=false&decoders=#ipcFrameDecoder&encoders=#encoders");
     }
 
     @Override

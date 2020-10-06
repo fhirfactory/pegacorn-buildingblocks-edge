@@ -1,9 +1,6 @@
 package net.fhirfactory.pegacorn.platform.edge.receive.common;
 
-import net.fhirfactory.pegacorn.petasos.ipc.beans.receiver.InterProcessingPlantHandoverPacketDecoderBean;
-import net.fhirfactory.pegacorn.petasos.ipc.beans.receiver.InterProcessingPlantHandoverRegistrationBean;
-import net.fhirfactory.pegacorn.petasos.ipc.beans.receiver.InterProcessingPlantHandoverResponseEncoderBean;
-import net.fhirfactory.pegacorn.petasos.ipc.beans.receiver.InterProcessingPlantHandoverResponseGenerationBean;
+import net.fhirfactory.pegacorn.petasos.ipc.beans.receiver.*;
 import net.fhirfactory.pegacorn.petasos.ipc.codecs.IPCPacketDecoderInitializerFactory;
 import net.fhirfactory.pegacorn.petasos.model.processingplant.DefaultWorkshopSetEnum;
 import net.fhirfactory.pegacorn.petasos.wup.archetypes.EdgeIngresMessagingGatewayWUP;
@@ -24,8 +21,12 @@ public abstract class DefaultFHIRBundleFromLadonReceiver extends EdgeIngresMessa
     @Override
     protected void executePostInitialisationActivities(){
         Registry registry = camelCTX.getRegistry();
-        ServerInitializerFactory ipcReceiverFactory = new IPCPacketDecoderInitializerFactory();
-        registry.bind("ipcReceiverFactory", ipcReceiverFactory);
+        ServerInitializerFactory ipcFromLandReceiverFactory = new IPCPacketDecoderInitializerFactory();
+        registry.bind("ipcFromLandReceiverFactory", ipcFromLandReceiverFactory);
+    }
+
+    private String getWUPContinuityRoute() {
+        return ("seda:" + this.getNameSet().getRouteCoreWUP() + ".InnerWUP.Continuity");
     }
 
     @Override
@@ -36,18 +37,23 @@ public abstract class DefaultFHIRBundleFromLadonReceiver extends EdgeIngresMessa
         if (this.getIngresTopologyEndpointElement() == null) {
             getLogger().error("EdgeIPCReceiverWUPTemplate::configure(): Guru Software Meditation Error --> No Ingres Point Specified to consider!!!");
         }
+
         getLogger().debug("EdgeIPCReceiverWUPTemplate::configure(): http provider --> {}", this.specifyEndpointComponentDefinition());
         getLogger().debug("EdgeIPCReceiverWUPTemplate::configure(): hostname --> {}", this.getIngresTopologyEndpointElement().getHostname());
         getLogger().debug("EdgeIPCReceiverWUPTemplate::configure(): port --> {}", this.getIngresTopologyEndpointElement().getExposedPort());
 
         from(this.ingresFeed())
-                .routeId(getWupInstanceName()+"-Main")
+                .routeId(getNameSet().getRouteCoreWUP())
                 .transform(simple("${bodyAs(String)}"))
                 .bean(InterProcessingPlantHandoverPacketDecoderBean.class, "handoverPacketDecode(*)")
                 .bean(InterProcessingPlantHandoverRegistrationBean.class, "ipcReceiverActivityStart(*,  Exchange," + this.getWupTopologyNodeElement().extractNodeKey() + ")")
-                .to(ExchangePattern.InOnly, this.egressFeed())
+                .to(ExchangePattern.InOnly, getWUPContinuityRoute())
                 .bean(InterProcessingPlantHandoverResponseGenerationBean.class, "generateInterProcessingPlantHandoverResponse(*,  Exchange," + this.getWupTopologyNodeElement().extractNodeKey() + ")")
                 .bean(InterProcessingPlantHandoverResponseEncoderBean.class, "responseEncoder(*)");
+
+        from(getWUPContinuityRoute())
+                .bean(InterProcessingPlantHandoverUoWExtractionBean.class, "extractUoW(*, Exchange)")
+                .to(egressFeed());
     }
 
     @Override
@@ -57,7 +63,7 @@ public abstract class DefaultFHIRBundleFromLadonReceiver extends EdgeIngresMessa
 
     @Override
     protected String specifyEndpointProtocolLeadout() {
-        return ("?serverInitializerFactory=#ipcReceiverFactory&sync=true");
+        return ("?serverInitializerFactory=#ipcFromLandReceiverFactory&sync=true");
     }
 
     @Override

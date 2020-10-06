@@ -35,7 +35,7 @@ public abstract class DefaultFHIRBundleToLadonForwarder extends EdgeIPCForwarder
         getLogger().debug(".specifySubscriptionTopics(): Entry");
         HashSet<TopicToken> myTopicSet = new HashSet<TopicToken>();
         TopicToken topicId = getFHIRTopicIDBuilder().createTopicToken("Bundle", "4.0.1");
-        topicId.addDescriminator("Destination", "Ladon");
+        topicId.addDescriminator("Destination", specifyTargetService());
         myTopicSet.add(topicId);
         getLogger().debug(".specifySubscriptionTopics(): Exit, added TopicToken --> {}", topicId);
         return (myTopicSet);
