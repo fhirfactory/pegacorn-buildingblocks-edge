@@ -92,7 +92,6 @@
             <scope>compile</scope>
         </dependency>
         <!-- Pegacorn Petasos Information Model -->
-<!--
         <dependency>
             <groupId>net.fhirfactory.pegacorn</groupId>
             <artifactId>pegacorn-platform-petasos-model</artifactId>
