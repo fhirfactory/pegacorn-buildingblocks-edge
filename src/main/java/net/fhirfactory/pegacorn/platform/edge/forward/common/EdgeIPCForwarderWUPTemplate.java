@@ -34,6 +34,9 @@ import javax.inject.Inject;
 import net.fhirfactory.pegacorn.petasos.ipc.beans.sender.InterProcessingPlantHandoverFinisherBean;
 import net.fhirfactory.pegacorn.petasos.ipc.beans.sender.InterProcessingPlantHandoverPacketEncoderBean;
 import net.fhirfactory.pegacorn.petasos.ipc.beans.sender.InterProcessingPlantHandoverPacketGenerationBean;
+import net.fhirfactory.pegacorn.petasos.ipc.codecs.IPCDelimiterBasedDecoderFactory;
+import net.fhirfactory.pegacorn.petasos.ipc.codecs.IPCStringBasedDecoderFactory;
+import net.fhirfactory.pegacorn.petasos.ipc.codecs.IPCStringBasedEncoderFactory;
 import net.fhirfactory.pegacorn.petasos.model.processingplant.DefaultWorkshopSetEnum;
 import net.fhirfactory.pegacorn.petasos.model.topology.EndpointElement;
 import net.fhirfactory.pegacorn.petasos.model.topology.NodeElement;
@@ -51,31 +54,25 @@ public abstract class EdgeIPCForwarderWUPTemplate extends EdgeEgressMessagingGat
     @Inject
     CamelContext camelCTX;
     
-    @Inject
-    private IPCPacketFramingConstants framingConstants;
-
     @Override
     protected void executePostInitialisationActivities(){
-        // Define Delimeters
-        ByteBuf ipcFrameEnd = Unpooled.copiedBuffer(framingConstants.getIpcPacketFrameEnd(),CharsetUtil.UTF_8);
-        ByteBuf[] delimiterSet = new ByteBuf[1];
-        delimiterSet[0] = ipcFrameEnd;
-        DelimiterBasedFrameDecoder ipcFrameBasedDecoder = new DelimiterBasedFrameDecoder(
-                framingConstants.getIpcPacketMaximumFrameSize(), true, delimiterSet);
-        StringDecoder stringDecoder = new StringDecoder();
-        // Register the new Decoder
+        IPCDelimiterBasedDecoderFactory ipcDelimiterDecoderFactory = new IPCDelimiterBasedDecoderFactory();
+        IPCStringBasedDecoderFactory ipcStringDecoderFactory = new IPCStringBasedDecoderFactory();
+        IPCStringBasedEncoderFactory ipcStringEncoderFactory = new IPCStringBasedEncoderFactory();
+
         Registry registry = camelCTX.getRegistry();
-        registry.bind("ipcFrameDecoder", ipcFrameBasedDecoder);
-        registry.bind("stringDecode", stringDecoder);
+
+        registry.bind("ipcFrameDecoder", ipcDelimiterDecoderFactory);
+        registry.bind("ipcStringDecoder", ipcStringDecoderFactory);
+
         List<ChannelHandler> decoders = new ArrayList<ChannelHandler>();
-        decoders.add(ipcFrameBasedDecoder);
-        decoders.add(stringDecoder);
+        decoders.add(ipcDelimiterDecoderFactory);
+        decoders.add(ipcStringDecoderFactory);
         registry.bind("decoders", decoders);
-        // Register stringEncoder
-        StringEncoder stringEncoder = new StringEncoder();
-        registry.bind("stringEncoder", stringEncoder);
-        List<ChannelHandler> encoders = new ArrayList<ChannelHandler>();
-        encoders.add(stringEncoder);
+
+        registry.bind("ipcStringEncoder", ipcStringEncoderFactory);
+        List<ChannelHandler> encoders = new ArrayList<>();
+        encoders.add(ipcStringEncoderFactory);
         registry.bind("encoders", encoders);
     }
 
@@ -142,7 +139,7 @@ public abstract class EdgeIPCForwarderWUPTemplate extends EdgeEgressMessagingGat
 
     @Override
     protected String specifyEndpointProtocolLeadout() {
-        return ("?allowDefaultCodec=false&decoders=#ipcFrameDecoder&encoders=#encoders");
+        return ("?allowDefaultCodec=false&decoders=#ipcFrameDecoder&encoders=#ipcStringEncoder&keepAlive=false");
     }
 
     @Override
