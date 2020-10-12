@@ -139,7 +139,7 @@ public abstract class EdgeIPCForwarderWUPTemplate extends EdgeEgressMessagingGat
 
     @Override
     protected String specifyEndpointProtocolLeadout() {
-        return ("?allowDefaultCodec=false&decoders=#ipcFrameDecoder&encoders=#ipcStringEncoder&keepAlive=false");
+        return ("?allowDefaultCodec=false&decoders=#ipcFrameDecoder&encoders=#ipcStringEncoder&keepAlive=false&clientMode=true&sync=true");
     }
 
     @Override

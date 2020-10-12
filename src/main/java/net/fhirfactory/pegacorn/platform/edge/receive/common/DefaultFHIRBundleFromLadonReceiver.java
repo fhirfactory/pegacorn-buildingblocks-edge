@@ -63,7 +63,7 @@ public abstract class DefaultFHIRBundleFromLadonReceiver extends EdgeIngresMessa
 
     @Override
     protected String specifyEndpointProtocolLeadout() {
-        return ("?serverInitializerFactory=#ipcFromLandReceiverFactory&sync=true");
+        return ("?serverInitializerFactory=#ipcFromLandReceiverFactory&sync=true&disconnect=true&keepAlive=false");
     }
 
     @Override
