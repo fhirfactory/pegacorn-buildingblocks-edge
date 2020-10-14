@@ -22,32 +22,27 @@
 package net.fhirfactory.pegacorn.platform.edge.forward.common;
 
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelHandler;
-import io.netty.handler.codec.string.StringDecoder;
-import io.netty.handler.codec.string.StringEncoder;
-import io.netty.util.CharsetUtil;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.inject.Inject;
+
+import org.apache.camel.CamelContext;
+import org.apache.camel.LoggingLevel;
+import org.apache.camel.spi.Registry;
+
+import io.netty.channel.ChannelHandler;
 import net.fhirfactory.pegacorn.petasos.ipc.beans.sender.InterProcessingPlantHandoverFinisherBean;
 import net.fhirfactory.pegacorn.petasos.ipc.beans.sender.InterProcessingPlantHandoverPacketEncoderBean;
 import net.fhirfactory.pegacorn.petasos.ipc.beans.sender.InterProcessingPlantHandoverPacketGenerationBean;
+import net.fhirfactory.pegacorn.petasos.ipc.beans.sender.InterProcessingPlantHandoverPacketResponseDecoder;
 import net.fhirfactory.pegacorn.petasos.ipc.codecs.IPCDelimiterBasedDecoderFactory;
-import net.fhirfactory.pegacorn.petasos.ipc.codecs.IPCStringBasedDecoderFactory;
 import net.fhirfactory.pegacorn.petasos.ipc.codecs.IPCStringBasedEncoderFactory;
 import net.fhirfactory.pegacorn.petasos.model.processingplant.DefaultWorkshopSetEnum;
 import net.fhirfactory.pegacorn.petasos.model.topology.EndpointElement;
 import net.fhirfactory.pegacorn.petasos.model.topology.NodeElement;
 import net.fhirfactory.pegacorn.petasos.model.topology.NodeElementTypeEnum;
 import net.fhirfactory.pegacorn.petasos.wup.archetypes.EdgeEgressMessagingGatewayWUP;
-import net.fhirfactory.pegacorn.petasos.ipc.beans.sender.InterProcessingPlantHandoverPacketResponseDecoder;
-import net.fhirfactory.pegacorn.petasos.ipc.model.IPCPacketFramingConstants;
-import org.apache.camel.CamelContext;
-import org.apache.camel.LoggingLevel;
-import org.apache.camel.component.netty.codec.DelimiterBasedFrameDecoder;
-import org.apache.camel.spi.Registry;
 
 public abstract class EdgeIPCForwarderWUPTemplate extends EdgeEgressMessagingGatewayWUP {
     
@@ -56,32 +51,37 @@ public abstract class EdgeIPCForwarderWUPTemplate extends EdgeEgressMessagingGat
     
     @Override
     protected void executePostInitialisationActivities(){
+        executePostInitialisationActivities(camelCTX);
+    }
+
+    public static void executePostInitialisationActivities(CamelContext camelCTX){
         IPCDelimiterBasedDecoderFactory ipcDelimiterDecoderFactory = new IPCDelimiterBasedDecoderFactory();
-        IPCStringBasedDecoderFactory ipcStringDecoderFactory = new IPCStringBasedDecoderFactory();
+// ipcStringDecoder is not currently used, but may be used in the future         
+//        IPCStringBasedDecoderFactory ipcStringDecoderFactory = new IPCStringBasedDecoderFactory();
         IPCStringBasedEncoderFactory ipcStringEncoderFactory = new IPCStringBasedEncoderFactory();
 
         Registry registry = camelCTX.getRegistry();
 
-        registry.bind("ipcFrameDecoder", ipcDelimiterDecoderFactory);
-        registry.bind("ipcStringDecoder", ipcStringDecoderFactory);
+        registry.bind(IPC_FRAME_DECODER, ipcDelimiterDecoderFactory);
+//        registry.bind(IPC_STRING_DECODER, ipcStringDecoderFactory);
 
         List<ChannelHandler> decoders = new ArrayList<ChannelHandler>();
         decoders.add(ipcDelimiterDecoderFactory);
-        decoders.add(ipcStringDecoderFactory);
+//        decoders.add(ipcStringDecoderFactory);
         registry.bind("decoders", decoders);
 
-        registry.bind("ipcStringEncoder", ipcStringEncoderFactory);
+        registry.bind(IPC_STRING_ENCODER, ipcStringEncoderFactory);
         List<ChannelHandler> encoders = new ArrayList<>();
         encoders.add(ipcStringEncoderFactory);
         registry.bind("encoders", encoders);
     }
-
+    
     @Override
     public void configure() throws Exception {
         getLogger().info("EdgeIPCForwarderWUPTemplate :: WUPIngresPoint/ingresFeed --> {}", this.ingresFeed());
         getLogger().info("EdgeIPCForwarderWUPTemplate :: WUPEgressPoint/egressFeed --> {}", this.egressFeed());
 
-        from(ingresFeed())
+        fromWithStandardExceptionHandling(ingresFeed())
                 .routeId(getNameSet().getRouteCoreWUP())
                 .log(LoggingLevel.INFO, "Incoming Raw Message --> ${body}")
                 .bean(InterProcessingPlantHandoverPacketGenerationBean.class, "constructInterProcessingPlantHandoverPacket(*,  Exchange," + this.getWupTopologyNodeElement().extractNodeKey() + ")")
@@ -131,25 +131,4 @@ public abstract class EdgeIPCForwarderWUPTemplate extends EdgeEgressMessagingGat
     protected String specifyWUPWorkshop(){
         return(DefaultWorkshopSetEnum.EDGE_WORKSHOP.getWorkshop());
     }
-
-    @Override
-    protected String specifyEndpointComponentDefinition() {
-        return ("netty");
-    }
-
-    @Override
-    protected String specifyEndpointProtocolLeadout() {
-        return ("?allowDefaultCodec=false&decoders=#ipcFrameDecoder&encoders=#ipcStringEncoder&keepAlive=false");
-    }
-
-    @Override
-    protected String specifyEndpointProtocolLeadIn() {
-        return ("://");
-    }
-
-    @Override
-    protected String specifyEndpointProtocol() {
-        return ("tcp");
-    }
-
 }

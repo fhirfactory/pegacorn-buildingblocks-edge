@@ -21,12 +21,11 @@
  */
 package net.fhirfactory.pegacorn.platform.edge.forward.fhirall;
 
-import net.fhirfactory.pegacorn.petasos.model.topics.TopicToken;
-import net.fhirfactory.pegacorn.platform.edge.forward.common.EdgeIPCForwarderWUPTemplate;
-
-import javax.inject.Inject;
 import java.util.HashSet;
 import java.util.Set;
+
+import net.fhirfactory.pegacorn.petasos.model.topics.TopicToken;
+import net.fhirfactory.pegacorn.platform.edge.forward.common.EdgeIPCForwarderWUPTemplate;
 
 public abstract class DefaultFHIRBundleToLadonForwarder extends EdgeIPCForwarderWUPTemplate {
 
