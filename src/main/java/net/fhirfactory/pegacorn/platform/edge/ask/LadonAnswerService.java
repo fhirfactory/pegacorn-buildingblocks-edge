@@ -22,7 +22,6 @@
 package net.fhirfactory.pegacorn.platform.edge.ask;
 
 import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.slf4j.Logger;
@@ -30,14 +29,18 @@ import org.slf4j.LoggerFactory;
 
 import net.fhirfactory.pegacorn.deployment.topology.manager.DeploymentTopologyIM;
 
-@ApplicationScoped
-public class LadonProxy extends PegacornHapiFhirProxy {
-    private static final Logger LOG = LoggerFactory.getLogger(LadonProxy.class);
+
+public abstract class LadonAnswerService extends PegacornHapiFhirProxy {
+
+    protected abstract Logger getLogger();
 
     String ladonAnswerEndpoint;
 
     @Inject
     DeploymentTopologyIM topologyProxy;
+
+    protected abstract String specifyLadonService();
+
 
     @PostConstruct
     public void initialise(){
@@ -45,18 +48,16 @@ public class LadonProxy extends PegacornHapiFhirProxy {
         newRestfulGenericClient(getLadonAnswerEndpoint());
     }
 
-    @Override
-    protected Logger getLogger() {
-        return LOG;
-    }    
     
     protected String buildLadonAnswerEndpoint(){
-        String endpointString = new String();
-
+        String endpointString = specifyLadonService();
         return(endpointString);
     }
 
     public String getLadonAnswerEndpoint(){
-        return(this.ladonAnswerEndpoint);
+        // this.ladonAnswerEndpoint
+        String endpoint = "http://10.10.10.20"
+        return(
+                //t);
     }
 }

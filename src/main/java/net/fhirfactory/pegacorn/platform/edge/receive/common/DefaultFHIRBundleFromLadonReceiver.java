@@ -24,7 +24,10 @@ public abstract class DefaultFHIRBundleFromLadonReceiver extends EdgeIngresMessa
     @Override
     protected void executePostInitialisationActivities(){
         executePostInitialisationActivities(camelCTX, specifyServerInitializerFactoryName());
+
     }
+
+    public String getSourceSubsystem(){return("Ladon");}
 
     public static void executePostInitialisationActivities(CamelContext camelCTX, String serverInitializerFactoryName){
         Registry registry = camelCTX.getRegistry();
@@ -59,7 +62,7 @@ public abstract class DefaultFHIRBundleFromLadonReceiver extends EdgeIngresMessa
                 .bean(InterProcessingPlantHandoverResponseEncoderBean.class, "responseEncoder(*)");
 
         fromWithStandardExceptionHandling(getWUPContinuityRoute())
-                .bean(InterProcessingPlantHandoverUoWExtractionBean.class, "extractUoW(*, Exchange)")
+                .bean(InterProcessingPlantHandoverUoWExtractionBean.class, "extractUoW(*, Exchange," + getSourceSubsystem() + ")")
                 .to(egressFeed());
     }
 

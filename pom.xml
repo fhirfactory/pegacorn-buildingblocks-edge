@@ -179,7 +179,7 @@
             <version>${version-ca.uhn.hapi.fhir}</version>
         </dependency>
 
-        <!-- This dependency is for the HAPI-FHIR Server -->
+        <!-- This dependency is for the HAPI-FHIR Client -->
         <dependency>
             <groupId>ca.uhn.hapi.fhir</groupId>
             <artifactId>hapi-fhir-client</artifactId>
