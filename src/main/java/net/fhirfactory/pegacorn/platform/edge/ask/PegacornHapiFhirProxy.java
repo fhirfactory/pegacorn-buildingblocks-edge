@@ -51,7 +51,11 @@ public abstract class PegacornHapiFhirProxy {
         contextR4.getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
         client = contextR4.newRestfulGenericClient(theServerBase);
 
+        String apiKey = PegacornProperties.getMandatoryProperty(getApiKeyPropertyName());
         // From https://hapifhir.io/hapi-fhir/docs/interceptors/built_in_client_interceptors.html#misc-add-headers-to-request
+        AdditionalRequestHeadersInterceptor interceptor = new AdditionalRequestHeadersInterceptor();
+        interceptor.addHeaderValue(API_KEY_HEADER_NAME, apiKey);
+        client.registerInterceptor(interceptor);
         
         return client;
     }
