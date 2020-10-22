@@ -32,6 +32,7 @@ import net.fhirfactory.pegacorn.util.PegacornProperties;
 
 public abstract class PegacornHapiFhirProxy {
     public static final String API_KEY_HEADER_NAME = "x-api-key";
+    public static final String DEFAULT_API_KEY_PROPERTY_NAME = "HAPI_API_KEY";
     private IGenericClient client;
 
     protected abstract Logger getLogger();
@@ -41,7 +42,7 @@ public abstract class PegacornHapiFhirProxy {
      *         if they don't want to use the default value of API_KEY
      */
     protected String getApiKeyPropertyName() {
-        return "API_KEY";
+        return DEFAULT_API_KEY_PROPERTY_NAME;
     }
 
     protected IGenericClient newRestfulGenericClient(String theServerBase) {
@@ -50,11 +51,7 @@ public abstract class PegacornHapiFhirProxy {
         contextR4.getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
         client = contextR4.newRestfulGenericClient(theServerBase);
 
-//        String apiKey = PegacornProperties.getMandatoryProperty(getApiKeyPropertyName());
         // From https://hapifhir.io/hapi-fhir/docs/interceptors/built_in_client_interceptors.html#misc-add-headers-to-request
-//        AdditionalRequestHeadersInterceptor interceptor = new AdditionalRequestHeadersInterceptor();
-//        interceptor.addHeaderValue(API_KEY_HEADER_NAME, apiKey);
-//        client.registerInterceptor(interceptor);
         
         return client;
     }
