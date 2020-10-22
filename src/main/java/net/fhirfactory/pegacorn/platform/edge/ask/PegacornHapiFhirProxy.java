@@ -21,6 +21,8 @@
  */
 package net.fhirfactory.pegacorn.platform.edge.ask;
 
+import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.rest.client.api.ServerValidationModeEnum;
 import org.slf4j.Logger;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
@@ -43,13 +45,16 @@ public abstract class PegacornHapiFhirProxy {
     }
 
     protected IGenericClient newRestfulGenericClient(String theServerBase) {
-        client = FhirUtil.getInstance().getFhirContext().newRestfulGenericClient(theServerBase);
+        getLogger().info(".newRestfulGenericClient(): Entry, theServerBase --> {}", theServerBase);
+        FhirContext contextR4 = FhirUtil.getInstance().getFhirContext();
+        contextR4.getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
+        client = contextR4.newRestfulGenericClient(theServerBase);
 
-        String apiKey = PegacornProperties.getMandatoryProperty(getApiKeyPropertyName());
+//        String apiKey = PegacornProperties.getMandatoryProperty(getApiKeyPropertyName());
         // From https://hapifhir.io/hapi-fhir/docs/interceptors/built_in_client_interceptors.html#misc-add-headers-to-request
-        AdditionalRequestHeadersInterceptor interceptor = new AdditionalRequestHeadersInterceptor();
-        interceptor.addHeaderValue(API_KEY_HEADER_NAME, apiKey);
-        client.registerInterceptor(interceptor);
+//        AdditionalRequestHeadersInterceptor interceptor = new AdditionalRequestHeadersInterceptor();
+//        interceptor.addHeaderValue(API_KEY_HEADER_NAME, apiKey);
+//        client.registerInterceptor(interceptor);
         
         return client;
     }
