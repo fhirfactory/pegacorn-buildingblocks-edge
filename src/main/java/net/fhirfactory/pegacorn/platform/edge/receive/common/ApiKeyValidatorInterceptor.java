@@ -10,6 +10,7 @@ import ca.uhn.fhir.rest.api.Constants;
 import ca.uhn.fhir.rest.server.exceptions.AuthenticationException;
 import ca.uhn.fhir.rest.server.exceptions.ForbiddenOperationException;
 import ca.uhn.fhir.rest.server.interceptor.InterceptorAdapter;
+import net.fhirfactory.pegacorn.util.PegacornProperties;
 
 /**
  * Validate that the correct ApiKey has been provided in HTTP request as either
@@ -25,6 +26,7 @@ public class ApiKeyValidatorInterceptor extends InterceptorAdapter {
     
     private String apiKeyHeaderName; 
     private String apiKeyValue;
+    private boolean allowInsecureRequests = false;
     
     public ApiKeyValidatorInterceptor(String apiKeyHeaderName, String apiKeyEnvironmentVariableName) {
         if (StringUtils.isBlank(apiKeyHeaderName)) {
@@ -35,10 +37,9 @@ public class ApiKeyValidatorInterceptor extends InterceptorAdapter {
         }
 
         this.apiKeyHeaderName = apiKeyHeaderName;
-        apiKeyValue = System.getenv(apiKeyEnvironmentVariableName);
-        if (StringUtils.isBlank(apiKeyValue)) {
-            throw new IllegalArgumentException("The System Environment Variable " + apiKeyEnvironmentVariableName + " must be specified");
-        }
+        apiKeyValue = PegacornProperties.getMandatoryProperty(apiKeyEnvironmentVariableName);
+
+        allowInsecureRequests = PegacornProperties.getBooleanProperty("ALLOW_INSECURE_REQUESTS", false);
     }
     
     @Override
@@ -46,7 +47,7 @@ public class ApiKeyValidatorInterceptor extends InterceptorAdapter {
         String requestURL = theRequest.getRequestURL().toString().trim();
         log.debug("In ApiKeyValidatorInterceptor http request={}", requestURL);
         
-        if (! theRequest.isSecure()) {
+        if (! allowInsecureRequests && ! theRequest.isSecure()) {
             log.warn("Rejecting request " + requestURL + " as it was not secure");            
             throw new ForbiddenOperationException("Insecure requests are forbidden");            
         }
