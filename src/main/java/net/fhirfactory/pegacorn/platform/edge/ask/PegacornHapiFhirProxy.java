@@ -21,6 +21,8 @@
  */
 package net.fhirfactory.pegacorn.platform.edge.ask;
 
+import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.rest.client.api.ServerValidationModeEnum;
 import org.slf4j.Logger;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
@@ -30,6 +32,7 @@ import net.fhirfactory.pegacorn.util.PegacornProperties;
 
 public abstract class PegacornHapiFhirProxy {
     public static final String API_KEY_HEADER_NAME = "x-api-key";
+    public static final String DEFAULT_API_KEY_PROPERTY_NAME = "HAPI_API_KEY";
     private IGenericClient client;
 
     protected abstract Logger getLogger();
@@ -39,11 +42,14 @@ public abstract class PegacornHapiFhirProxy {
      *         if they don't want to use the default value of API_KEY
      */
     protected String getApiKeyPropertyName() {
-        return "API_KEY";
+        return DEFAULT_API_KEY_PROPERTY_NAME;
     }
 
     protected IGenericClient newRestfulGenericClient(String theServerBase) {
-        client = FhirUtil.getInstance().getFhirContext().newRestfulGenericClient(theServerBase);
+        getLogger().info(".newRestfulGenericClient(): Entry, theServerBase --> {}", theServerBase);
+        FhirContext contextR4 = FhirUtil.getInstance().getFhirContext();
+        contextR4.getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
+        client = contextR4.newRestfulGenericClient(theServerBase);
 
         String apiKey = PegacornProperties.getMandatoryProperty(getApiKeyPropertyName());
         // From https://hapifhir.io/hapi-fhir/docs/interceptors/built_in_client_interceptors.html#misc-add-headers-to-request
