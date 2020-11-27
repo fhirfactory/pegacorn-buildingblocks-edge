@@ -82,7 +82,7 @@ public abstract class JPAServerSecureAccessor extends JPAServerSecureProxy {
         EndpointElement endpoint = deploymentTopologyIM.getEndpoint(targetNode, specifyTopologyJPAServerEndpointName(), specifyTopologySubsystemVersion());
         getLogger().trace(".deriveTargetEndpointDetails(): targetEndpoint (EndpointElement) --> {}", endpoint);
         //TODO make the https conditional based on the deployment topology
-        String endpointDetails = "https://"+ endpoint.getHostname() + ":" + endpoint.getExposedPort() + PEGACORN_FHIR_RESOURCE_PATH;
+        String endpointDetails = "http://"+ endpoint.getHostname() + ":" + endpoint.getExposedPort() + PEGACORN_FHIR_RESOURCE_PATH;
         getLogger().info(".deriveTargetEndpointDetails(): Exit, endpointDetails --> {}", endpointDetails);
         return(endpointDetails);
     }

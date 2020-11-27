@@ -24,6 +24,7 @@ package net.fhirfactory.pegacorn.platform.edge.ask;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
+import net.fhirfactory.pegacorn.deployment.properties.SystemWideProperties;
 import org.slf4j.Logger;
 
 import net.fhirfactory.pegacorn.deployment.topology.manager.DeploymentTopologyIM;
@@ -39,6 +40,9 @@ public abstract class LadonAskProxy extends PegacornHapiFhirProxy {
 
     @Inject
     DeploymentTopologyIM topologyProxy;
+
+    @Inject
+    SystemWideProperties systemWideProperties;
 
     protected abstract String specifyLadonService();
     protected abstract String specifyLadonProcessingPlant();
@@ -83,7 +87,13 @@ public abstract class LadonAskProxy extends PegacornHapiFhirProxy {
         getLogger().trace(".deriveTargetEndpointDetails(): targetEndpointName --> {}, targetEndpointVersion --> {}", specifyLadonAskEndpointName(), specifyLadonSubsystemVersion());
         EndpointElement endpoint = topologyProxy.getEndpoint(targetNode, specifyLadonAskEndpointName(), specifyLadonSubsystemVersion());
         getLogger().trace(".deriveTargetEndpointDetails(): targetEndpoint (EndpointElement) --> {}", endpoint);
-        String endpointDetails = "https://"+ endpoint.getHostname() + ":" + endpoint.getExposedPort() + "/pegacorn/fhir/r4/";
+        String http_type = null;
+        if(endpoint.isUtilisingSecurity()) {
+            http_type = "https";
+        } else {
+            http_type = "http";
+        }
+        String endpointDetails = http_type + "://" + endpoint.getHostname() + ":" + endpoint.getExposedPort() + systemWideProperties.getPegacornInternalFhirResourceR4Path();
         getLogger().info(".deriveTargetEndpointDetails(): Exit, endpointDetails --> {}", endpointDetails);
         return(endpointDetails);
     }
