@@ -83,12 +83,12 @@ public abstract class EdgeIPCForwarderWUPTemplate extends EdgeEgressMessagingGat
 
         fromWithStandardExceptionHandling(ingresFeed())
                 .routeId(getNameSet().getRouteCoreWUP())
-                .log(LoggingLevel.INFO, "Incoming Raw Message --> ${body}")
+                .log(LoggingLevel.DEBUG, "Raw Content to be Forwarded --> ${body}")
                 .bean(InterProcessingPlantHandoverPacketGenerationBean.class, "constructInterProcessingPlantHandoverPacket(*,  Exchange," + this.getWupTopologyNodeElement().extractNodeKey() + ")")
                 .bean(InterProcessingPlantHandoverPacketEncoderBean.class, "handoverPacketEncode")
                 .to(specifyEgressEndpoint())
                 .transform(simple("${bodyAs(String)}"))
-                .log(LoggingLevel.INFO, "Response Raw Message --> ${body}")
+                .log(LoggingLevel.DEBUG, "Response Raw Message --> ${body}")
                 .bean(InterProcessingPlantHandoverPacketResponseDecoder.class, "contextualiseInterProcessingPlantHandoverResponsePacket(*,  Exchange," + this.getWupTopologyNodeElement().extractNodeKey() + ")")
                 .bean(InterProcessingPlantHandoverFinisherBean.class, "ipcSenderNotifyActivityFinished(*, Exchange," + this.getWupTopologyNodeElement().extractNodeKey() + ")");
     }

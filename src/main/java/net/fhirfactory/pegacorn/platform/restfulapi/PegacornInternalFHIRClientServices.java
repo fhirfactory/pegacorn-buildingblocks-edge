@@ -19,11 +19,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package net.fhirfactory.pegacorn.platform.edge.ask;
+package net.fhirfactory.pegacorn.platform.restfulapi;
 
 import org.hl7.fhir.r4.model.*;
 
-public abstract class LadonAskServices extends LadonAskProxy {
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
+public abstract class PegacornInternalFHIRClientServices extends PegacornInternalFHIRClientProxy {
 
     /**
      *
@@ -34,9 +37,9 @@ public abstract class LadonAskServices extends LadonAskProxy {
         CodeableConcept identifierType = resourceReference.getIdentifier().getType();
         Coding identifierCode = identifierType.getCodingFirstRep();
         String identifierCodeValue = identifierCode.getCode();
-        String identifierSystem = identifierCode.getSystem();
+//        String identifierSystem = identifierCode.getSystem();
 
-        Bundle response = findResourceByIdentifier(resourceReference.getType(), identifierSystem, identifierCodeValue, resourceReference.getIdentifier().getValue());
+        Bundle response = findResourceByIdentifier(resourceReference.getType(), resourceReference.getIdentifier().getSystem(), identifierCodeValue, resourceReference.getIdentifier().getValue());
         return (response);
     }
 
@@ -50,9 +53,9 @@ public abstract class LadonAskServices extends LadonAskProxy {
         CodeableConcept identifierType = identifier.getType();
         Coding identifierCode = identifierType.getCodingFirstRep();
         String identifierCodeValue = identifierCode.getCode();
-        String identifierSystem = identifierCode.getSystem();
+//        String identifierSystem = identifierCode.getSystem();
 
-        Bundle response = findResourceByIdentifier(resourceType.getPath(), identifierSystem, identifierCodeValue, identifier.getValue());
+        Bundle response = findResourceByIdentifier(resourceType.getPath(), identifier.getSystem(), identifierCodeValue, identifier.getValue());
         return (response);
     }
 
@@ -66,9 +69,9 @@ public abstract class LadonAskServices extends LadonAskProxy {
         CodeableConcept identifierType = identifier.getType();
         Coding identifierCode = identifierType.getCodingFirstRep();
         String identifierCodeValue = identifierCode.getCode();
-        String identifierSystem = identifierCode.getSystem();
+//        String identifierSystem = identifierCode.getSystem();
 
-        Bundle response = findResourceByIdentifier(resourceType, identifierSystem, identifierCodeValue, identifier.getValue());
+        Bundle response = findResourceByIdentifier(resourceType, identifier.getSystem(), identifierCodeValue, identifier.getValue());
         return (response);
     }
 
@@ -95,7 +98,10 @@ public abstract class LadonAskServices extends LadonAskProxy {
      * @return
      */
     public Bundle findResourceByIdentifier(String resourceType, String identifierSystem, String identifierCode, String identifierValue){
-        String searchURL = resourceType + "?identifier:of_type=" + identifierSystem + "|" + identifierCode + "|" + identifierValue;
+        String rawSearchString = identifierSystem + /* "|" + identifierCode + */ "|" + identifierValue;
+        String urlEncodedString = "identifier:of_type=" + URLEncoder.encode(rawSearchString, StandardCharsets.UTF_8);
+        String searchURL = resourceType + "?" + urlEncodedString;
+        getLogger().info(".findResourceByIdentifier(): URL --> {}", searchURL);
         Bundle response = getClient().search()
                 .byUrl(searchURL)
                 .returnBundle(Bundle.class)
