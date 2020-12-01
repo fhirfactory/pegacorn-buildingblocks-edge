@@ -99,13 +99,14 @@ public abstract class PegacornInternalFHIRClientServices extends PegacornInterna
      */
     public Bundle findResourceByIdentifier(String resourceType, String identifierSystem, String identifierCode, String identifierValue){
         String rawSearchString = identifierSystem + /* "|" + identifierCode + */ "|" + identifierValue;
-        String urlEncodedString = "identifier:of_type=" + URLEncoder.encode(rawSearchString, StandardCharsets.UTF_8);
+        String urlEncodedString = "identifier=" + URLEncoder.encode(rawSearchString, StandardCharsets.UTF_8);
         String searchURL = resourceType + "?" + urlEncodedString;
         getLogger().info(".findResourceByIdentifier(): URL --> {}", searchURL);
         Bundle response = getClient().search()
                 .byUrl(searchURL)
                 .returnBundle(Bundle.class)
                 .execute();
+        getLogger().info(".findResourceByIdentifier(): Response Bundle.total --> {}", response.getTotal());
         return (response);
     }
 }
