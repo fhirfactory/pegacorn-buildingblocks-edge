@@ -19,19 +19,19 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package net.fhirfactory.pegacorn.platform.edge.ask;
+package net.fhirfactory.pegacorn.platform.restfulapi;
 
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
-
-import org.slf4j.Logger;
-
+import net.fhirfactory.pegacorn.deployment.properties.SystemWideProperties;
 import net.fhirfactory.pegacorn.deployment.topology.manager.DeploymentTopologyIM;
 import net.fhirfactory.pegacorn.petasos.model.topology.EndpointElement;
 import net.fhirfactory.pegacorn.petasos.model.topology.NodeElement;
 import net.fhirfactory.pegacorn.petasos.model.topology.NodeElementTypeEnum;
+import org.slf4j.Logger;
 
-public abstract class LadonAskProxy extends PegacornHapiFhirProxy {
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
+
+public abstract class PegacornInternalFHIRClientProxy extends HAPIServerSecureProxy {
 
     protected abstract Logger getLogger();
 
@@ -40,11 +40,14 @@ public abstract class LadonAskProxy extends PegacornHapiFhirProxy {
     @Inject
     DeploymentTopologyIM topologyProxy;
 
-    protected abstract String specifyLadonService();
-    protected abstract String specifyLadonProcessingPlant();
-    protected abstract String specifyLadonSubsystemName();
-    protected abstract String specifyLadonSubsystemVersion();
-    protected abstract String specifyLadonAskEndpointName();
+    @Inject
+    SystemWideProperties systemWideProperties;
+
+    protected abstract String specifyFHIRServerSubsystemService();
+    protected abstract String specifyFHIRServerProcessingPlant();
+    protected abstract String specifyFHIRServerSubsystemName();
+    protected abstract String specifyFHIRServerSubsystemVersion();
+    protected abstract String specifyFHIRServerServerEndpointName();
 
     @PostConstruct
     public void initialise(){
@@ -54,14 +57,14 @@ public abstract class LadonAskProxy extends PegacornHapiFhirProxy {
 
     
     protected String buildLadonAnswerEndpoint(){
-        String endpointString = specifyLadonService();
+        String endpointString = specifyFHIRServerSubsystemService();
         return(endpointString);
     }
 
     protected String deriveTargetEndpointDetails(){
         getLogger().debug(".deriveTargetEndpointDetails(): Entry");
-        getLogger().trace(".deriveTargetEndpointDetails(): Target Subsystem Name --> {}, Target Subsystem Version --> {}", specifyLadonSubsystemName(), specifyLadonSubsystemVersion());
-        NodeElement targetSubsystem = topologyProxy.getNode(specifyLadonSubsystemName(), NodeElementTypeEnum.SUBSYSTEM, specifyLadonSubsystemVersion());
+        getLogger().trace(".deriveTargetEndpointDetails(): Target Subsystem Name --> {}, Target Subsystem Version --> {}", specifyFHIRServerSubsystemName(), specifyFHIRServerSubsystemVersion());
+        NodeElement targetSubsystem = topologyProxy.getNode(specifyFHIRServerSubsystemName(), NodeElementTypeEnum.SUBSYSTEM, specifyFHIRServerSubsystemVersion());
         getLogger().trace(".deriveTargetEndpointDetails(): Target Subsystem (NodeElement) --> {}", targetSubsystem);
         NodeElement targetNode;
 
@@ -70,20 +73,26 @@ public abstract class LadonAskProxy extends PegacornHapiFhirProxy {
             case RESILIENCE_MODE_KUBERNETES_MULTISITE:
             case RESILIENCE_MODE_KUBERNETES_CLUSTERED:
             case RESILIENCE_MODE_KUBERNETES_STANDALONE: {
-                targetNode = topologyProxy.getNode(specifyLadonService(), NodeElementTypeEnum.SERVICE, specifyLadonSubsystemVersion());
+                targetNode = topologyProxy.getNode(specifyFHIRServerSubsystemService(), NodeElementTypeEnum.SERVICE, specifyFHIRServerSubsystemVersion());
                 break;
             }
             case RESILIENCE_MODE_CLUSTERED:
             case RESILIENCE_MODE_STANDALONE:
             default:{
-                targetNode = topologyProxy.getNode(specifyLadonProcessingPlant(), NodeElementTypeEnum.PROCESSING_PLANT, specifyLadonSubsystemVersion());
+                targetNode = topologyProxy.getNode(specifyFHIRServerProcessingPlant(), NodeElementTypeEnum.PROCESSING_PLANT, specifyFHIRServerSubsystemVersion());
             }
         }
         getLogger().trace(".deriveTargetEndpointDetails(): targetNode --> {}", targetNode);
-        getLogger().trace(".deriveTargetEndpointDetails(): targetEndpointName --> {}, targetEndpointVersion --> {}", specifyLadonAskEndpointName(), specifyLadonSubsystemVersion());
-        EndpointElement endpoint = topologyProxy.getEndpoint(targetNode, specifyLadonAskEndpointName(), specifyLadonSubsystemVersion());
+        getLogger().trace(".deriveTargetEndpointDetails(): targetEndpointName --> {}, targetEndpointVersion --> {}", specifyFHIRServerServerEndpointName(), specifyFHIRServerSubsystemVersion());
+        EndpointElement endpoint = topologyProxy.getEndpoint(targetNode, specifyFHIRServerServerEndpointName(), specifyFHIRServerSubsystemVersion());
         getLogger().trace(".deriveTargetEndpointDetails(): targetEndpoint (EndpointElement) --> {}", endpoint);
-        String endpointDetails = "https://"+ endpoint.getHostname() + ":" + endpoint.getExposedPort() + "/pegacorn/fhir/r4/";
+        String http_type = null;
+        if(endpoint.isUtilisingSecurity()) {
+            http_type = "https";
+        } else {
+            http_type = "http";
+        }
+        String endpointDetails = http_type + "://" + endpoint.getHostname() + ":" + endpoint.getExposedPort() + systemWideProperties.getPegacornInternalFhirResourceR4Path();
         getLogger().info(".deriveTargetEndpointDetails(): Exit, endpointDetails --> {}", endpointDetails);
         return(endpointDetails);
     }

@@ -19,25 +19,40 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package net.fhirfactory.pegacorn.platform.edge.forward.fhirall;
+package net.fhirfactory.pegacorn.platform.edge.ask;
 
-import java.util.HashSet;
-import java.util.Set;
+import net.fhirfactory.pegacorn.platform.restfulapi.PegacornInternalFHIRClientServices;
 
-import net.fhirfactory.pegacorn.petasos.model.topics.TopicToken;
-import net.fhirfactory.pegacorn.platform.edge.forward.common.EdgeIPCForwarderWUPTemplate;
+public abstract class AskLadonServicesBase extends PegacornInternalFHIRClientServices {
 
-public abstract class DefaultFHIRBundleToLadonForwarder extends EdgeIPCForwarderWUPTemplate {
+    protected abstract String specifyLadonService();
+    protected abstract String specifyLadonProcessingPlant();
+    protected abstract String specifyLadonSubsystemName();
+    protected abstract String specifyLadonSubsystemVersion();
+    protected abstract String specifyLadonAskEndpointName();
 
     @Override
-    public Set<TopicToken> specifySubscriptionTopics() {
-        getLogger().debug(".specifySubscriptionTopics(): Entry");
-        HashSet<TopicToken> myTopicSet = new HashSet<TopicToken>();
-        TopicToken topicId = getFHIRTopicIDBuilder().createTopicToken("Bundle", "4.0.1");
-        topicId.addDescriminator("Destination", specifyTargetService());
-        myTopicSet.add(topicId);
-        getLogger().debug(".specifySubscriptionTopics(): Exit, added TopicToken --> {}", topicId);
-        return (myTopicSet);
+    protected String specifyFHIRServerSubsystemService() {
+        return (specifyLadonService());
     }
 
+    @Override
+    protected String specifyFHIRServerProcessingPlant() {
+        return (specifyLadonProcessingPlant());
+    }
+
+    @Override
+    protected String specifyFHIRServerSubsystemName() {
+        return (specifyLadonSubsystemName());
+    }
+
+    @Override
+    protected String specifyFHIRServerSubsystemVersion() {
+        return (specifyLadonSubsystemVersion());
+    }
+
+    @Override
+    protected String specifyFHIRServerServerEndpointName() {
+        return (specifyLadonAskEndpointName());
+    }
 }

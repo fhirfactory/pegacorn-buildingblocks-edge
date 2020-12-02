@@ -1,4 +1,4 @@
-package net.fhirfactory.pegacorn.platform.edge.receive.common;
+package net.fhirfactory.pegacorn.platform.edge.receive;
 
 import javax.inject.Inject;
 
