@@ -21,25 +21,30 @@
  */
 package net.fhirfactory.pegacorn.platform.restfulapi;
 
+import net.fhirfactory.pegacorn.datasets.fhir.r4.base.entities.bundle.BundleContentHelper;
 import org.hl7.fhir.r4.model.*;
 
+import javax.inject.Inject;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
 public abstract class PegacornInternalFHIRClientServices extends PegacornInternalFHIRClientProxy {
+
+    @Inject
+    private BundleContentHelper bundleContentHelper;
 
     /**
      *
      * @param resourceReference
      * @return
      */
-    public Bundle findResourceByReference(Reference resourceReference){
+    public Resource findResourceByReference(Reference resourceReference){
         CodeableConcept identifierType = resourceReference.getIdentifier().getType();
         Coding identifierCode = identifierType.getCodingFirstRep();
         String identifierCodeValue = identifierCode.getCode();
 //        String identifierSystem = identifierCode.getSystem();
 
-        Bundle response = findResourceByIdentifier(resourceReference.getType(), resourceReference.getIdentifier().getSystem(), identifierCodeValue, resourceReference.getIdentifier().getValue());
+        Resource response = findResourceByIdentifier(resourceReference.getType(), resourceReference.getIdentifier().getSystem(), identifierCodeValue, resourceReference.getIdentifier().getValue());
         return (response);
     }
 
@@ -49,13 +54,14 @@ public abstract class PegacornInternalFHIRClientServices extends PegacornInterna
      * @param identifier
      * @return
      */
-    public Bundle findResourceByIdentifier(ResourceType resourceType, Identifier identifier){
+    public Resource findResourceByIdentifier(ResourceType resourceType, Identifier identifier){
         CodeableConcept identifierType = identifier.getType();
         Coding identifierCode = identifierType.getCodingFirstRep();
         String identifierCodeValue = identifierCode.getCode();
-//        String identifierSystem = identifierCode.getSystem();
+        String identifierSystem = identifierCode.getSystem();
+        String identifierValue = identifier.getValue();
 
-        Bundle response = findResourceByIdentifier(resourceType.getPath(), identifier.getSystem(), identifierCodeValue, identifier.getValue());
+        Resource response = findResourceByIdentifier(resourceType.toString(), identifierSystem, identifierCodeValue, identifierValue);
         return (response);
     }
 
@@ -65,13 +71,19 @@ public abstract class PegacornInternalFHIRClientServices extends PegacornInterna
      * @param identifier
      * @return
      */
-    public Bundle findResourceByIdentifier(String resourceType, Identifier identifier){
-        CodeableConcept identifierType = identifier.getType();
-        Coding identifierCode = identifierType.getCodingFirstRep();
-        String identifierCodeValue = identifierCode.getCode();
-//        String identifierSystem = identifierCode.getSystem();
-
-        Bundle response = findResourceByIdentifier(resourceType, identifier.getSystem(), identifierCodeValue, identifier.getValue());
+    public Resource findResourceByIdentifier(String resourceType, Identifier identifier){
+        String identifierValue = identifier.getValue();
+        String identifierSystem = null;
+        String identifierCode = null;
+        if(identifier.hasType()) {
+            CodeableConcept identifierType = identifier.getType();
+            Coding identifierTypeCode = identifierType.getCodingFirstRep();
+            identifierCode = identifierTypeCode.getCode();
+            identifierSystem = identifierTypeCode.getSystem();
+        } else {
+            identifierSystem = identifier.getSystem();
+        }
+        Resource response = findResourceByIdentifier(resourceType, identifierSystem, identifierCode, identifierValue);
         return (response);
     }
 
@@ -83,9 +95,8 @@ public abstract class PegacornInternalFHIRClientServices extends PegacornInterna
      * @param identifierValue
      * @return
      */
-    public Bundle findResourceByIdentifier(ResourceType resourceType, String identifierSystem, String identifierCode, String identifierValue){
-        String searchURL = resourceType.getPath() + "?identifier:of_type=" + identifierSystem + "|" + identifierCode + "|" + identifierValue;
-        Bundle response = findResourceByIdentifier(resourceType.getPath(), identifierSystem, identifierCode, identifierValue);
+    public Resource findResourceByIdentifier(ResourceType resourceType, String identifierSystem, String identifierCode, String identifierValue){
+        Resource response = findResourceByIdentifier(resourceType.toString(), identifierSystem, identifierCode, identifierValue);
         return (response);
     }
 
@@ -97,15 +108,22 @@ public abstract class PegacornInternalFHIRClientServices extends PegacornInterna
      * @param identifierValue
      * @return
      */
-    public Bundle findResourceByIdentifier(String resourceType, String identifierSystem, String identifierCode, String identifierValue){
-        String rawSearchString = identifierSystem + /* "|" + identifierCode + */ "|" + identifierValue;
-        String urlEncodedString = "identifier=" + URLEncoder.encode(rawSearchString, StandardCharsets.UTF_8);
+    public Resource findResourceByIdentifier(String resourceType, String identifierSystem, String identifierCode, String identifierValue){
+        String urlEncodedString = null;
+        if(identifierCode == null ) {
+            String rawSearchString = identifierSystem + /* "|" + identifierCode + */ "|" + identifierValue;
+            urlEncodedString = "identifier=" + URLEncoder.encode(rawSearchString, StandardCharsets.UTF_8);
+        } else {
+            String rawSearchString = identifierSystem + "|" + identifierCode + "|" + identifierValue;
+            urlEncodedString = "identifier:of_type=" + URLEncoder.encode(rawSearchString, StandardCharsets.UTF_8);
+        }
         String searchURL = resourceType + "?" + urlEncodedString;
         getLogger().info(".findResourceByIdentifier(): URL --> {}", searchURL);
         Bundle response = getClient().search()
                 .byUrl(searchURL)
                 .returnBundle(Bundle.class)
                 .execute();
+        Resource resource = bundleContentHelper.extractFirstRepOfType(response, resourceType);
         getLogger().info(".findResourceByIdentifier(): Response Bundle.total --> {}", response.getTotal());
         return (response);
     }
