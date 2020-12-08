@@ -125,6 +125,6 @@ public abstract class PegacornInternalFHIRClientServices extends PegacornInterna
                 .execute();
         Resource resource = bundleContentHelper.extractFirstRepOfType(response, resourceType);
         getLogger().info(".findResourceByIdentifier(): Response Bundle.total --> {}", response.getTotal());
-        return (response);
+        return (resource);
     }
 }
