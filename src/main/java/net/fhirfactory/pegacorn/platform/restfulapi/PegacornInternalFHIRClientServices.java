@@ -21,12 +21,21 @@
  */
 package net.fhirfactory.pegacorn.platform.restfulapi;
 
-import net.fhirfactory.pegacorn.datasets.fhir.r4.base.entities.bundle.BundleContentHelper;
-import org.hl7.fhir.r4.model.*;
-
-import javax.inject.Inject;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+
+import javax.inject.Inject;
+
+import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.CodeableConcept;
+import org.hl7.fhir.r4.model.Coding;
+import org.hl7.fhir.r4.model.Identifier;
+import org.hl7.fhir.r4.model.Reference;
+import org.hl7.fhir.r4.model.Resource;
+import org.hl7.fhir.r4.model.ResourceType;
+
+import ca.uhn.fhir.parser.IParser;
+import net.fhirfactory.pegacorn.datasets.fhir.r4.base.entities.bundle.BundleContentHelper;
 
 public abstract class PegacornInternalFHIRClientServices extends PegacornInternalFHIRClientProxy {
 
@@ -109,7 +118,7 @@ public abstract class PegacornInternalFHIRClientServices extends PegacornInterna
      * @return
      */
     public Resource findResourceByIdentifier(String resourceType, String identifierSystem, String identifierCode, String identifierValue){
-        getLogger().debug(".findResourceByIdentifier(): Entry, resourceType --> {}, identfierSystem --> {}, identifierCode --> {}, identifierValue -->{}", resourceType, identifierSystem, identifierCode, identifierValue);
+        getLogger().info(".findResourceByIdentifier(): Entry, resourceType --> {}, identfierSystem --> {}, identifierCode --> {}, identifierValue -->{}", resourceType, identifierSystem, identifierCode, identifierValue);
         String urlEncodedString = null;
         if(identifierCode == null ) {
             String rawSearchString = identifierSystem + /* "|" + identifierCode + */ "|" + identifierValue;
@@ -124,8 +133,14 @@ public abstract class PegacornInternalFHIRClientServices extends PegacornInterna
                 .byUrl(searchURL)
                 .returnBundle(Bundle.class)
                 .execute();
+        IParser r4Parser = getFHIRContextUtility().getJsonParser().setPrettyPrint(true);
+        if(getLogger().isInfoEnabled()) {
+            if(response != null) {
+                getLogger().info(".findResourceByIdentifier(): Retrieved Bundle --> {}", r4Parser.encodeResourceToString(response));
+            }
+        }
         Resource resource = bundleContentHelper.extractFirstRepOfType(response, resourceType);
-        getLogger().debug(".findResourceByIdentifier(): Retrieved Resource --> {}", resource);
+        getLogger().info(".findResourceByIdentifier(): Retrieved Resource --> {}", resource);
         return (resource);
     }
 }

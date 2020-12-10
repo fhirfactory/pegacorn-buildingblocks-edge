@@ -21,16 +21,14 @@
  */
 package net.fhirfactory.pegacorn.platform.restfulapi;
 
+import javax.inject.Inject;
+
 import org.slf4j.Logger;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.api.ServerValidationModeEnum;
-import ca.uhn.fhir.rest.client.interceptor.AdditionalRequestHeadersInterceptor;
 import net.fhirfactory.pegacorn.util.FHIRContextUtility;
-import net.fhirfactory.pegacorn.util.PegacornProperties;
-
-import javax.inject.Inject;
 
 public abstract class HAPIServerSecureProxy {
     public static final String API_KEY_HEADER_NAME = "x-api-key";
@@ -44,6 +42,10 @@ public abstract class HAPIServerSecureProxy {
     }
 
     protected abstract Logger getLogger();
+    
+    protected FHIRContextUtility getFHIRContextUtility() {
+        return(fhirContextUtility);
+    }
     
     /**
      * @return the name of the PegacornProperties to lookup to get the value of the API Key.  Subclasses can override
