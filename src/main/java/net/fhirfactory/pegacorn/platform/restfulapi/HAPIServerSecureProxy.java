@@ -21,13 +21,15 @@
  */
 package net.fhirfactory.pegacorn.platform.restfulapi;
 
+import javax.inject.Inject;
+
 import org.slf4j.Logger;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.api.ServerValidationModeEnum;
 import ca.uhn.fhir.rest.client.interceptor.AdditionalRequestHeadersInterceptor;
-import net.fhirfactory.pegacorn.util.FhirUtil;
+import net.fhirfactory.pegacorn.util.FHIRContextUtility;
 import net.fhirfactory.pegacorn.util.PegacornProperties;
 
 public abstract class HAPIServerSecureProxy {
@@ -35,10 +37,17 @@ public abstract class HAPIServerSecureProxy {
     public static final String DEFAULT_API_KEY_PROPERTY_NAME = "HAPI_API_KEY";
     private IGenericClient client;
 
+    @Inject
+    private FHIRContextUtility fhirContextUtility;
+
     public HAPIServerSecureProxy(){
     }
 
     protected abstract Logger getLogger();
+    
+    protected FHIRContextUtility getFHIRContextUtility() {
+        return(fhirContextUtility);
+    }
     
     /**
      * @return the name of the PegacornProperties to lookup to get the value of the API Key.  Subclasses can override
@@ -51,7 +60,7 @@ public abstract class HAPIServerSecureProxy {
     protected IGenericClient newRestfulGenericClient(String theServerBase) {
         getLogger().debug(".newRestfulGenericClient(): Entry, theServerBase --> {}", theServerBase);
         getLogger().trace(".newRestfulGenericClient(): Get the FHIRContext!");
-        FhirContext contextR4 = FhirUtil.getInstance().getFhirContext();
+        FhirContext contextR4 = fhirContextUtility.getFhirContext();
         getLogger().trace(".newRestfulGenericClient(): Set the ValidationMode to -NEVER-");
         contextR4.getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
         getLogger().trace(".newRestfulGenericClient(): Get the Client");

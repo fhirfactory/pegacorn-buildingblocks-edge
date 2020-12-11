@@ -32,7 +32,7 @@ public abstract class AskLadonServicesBase extends PegacornInternalFHIRClientSer
     protected abstract String specifyLadonAskEndpointName();
 
     @Override
-    protected String specifyFHIRServerSubsystemService() {
+    protected String specifyFHIRServerService() {
         return (specifyLadonService());
     }
 
