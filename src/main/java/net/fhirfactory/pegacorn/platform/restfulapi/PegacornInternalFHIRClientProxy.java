@@ -43,7 +43,7 @@ public abstract class PegacornInternalFHIRClientProxy extends HAPIServerSecurePr
     @Inject
     SystemWideProperties systemWideProperties;
 
-    protected abstract String specifyFHIRServerSubsystemService();
+    protected abstract String specifyFHIRServerService();
     protected abstract String specifyFHIRServerProcessingPlant();
     protected abstract String specifyFHIRServerSubsystemName();
     protected abstract String specifyFHIRServerSubsystemVersion();
@@ -57,7 +57,7 @@ public abstract class PegacornInternalFHIRClientProxy extends HAPIServerSecurePr
 
     
     protected String buildLadonAnswerEndpoint(){
-        String endpointString = specifyFHIRServerSubsystemService();
+        String endpointString = specifyFHIRServerService();
         return(endpointString);
     }
 
@@ -73,12 +73,14 @@ public abstract class PegacornInternalFHIRClientProxy extends HAPIServerSecurePr
             case RESILIENCE_MODE_KUBERNETES_MULTISITE:
             case RESILIENCE_MODE_KUBERNETES_CLUSTERED:
             case RESILIENCE_MODE_KUBERNETES_STANDALONE: {
-                targetNode = topologyProxy.getNode(specifyFHIRServerSubsystemService(), NodeElementTypeEnum.SERVICE, specifyFHIRServerSubsystemVersion());
+                getLogger().trace(".deriveTargetEndpointDetails(): Is kubernetes based");
+                targetNode = topologyProxy.getNode(specifyFHIRServerService(), NodeElementTypeEnum.SERVICE, specifyFHIRServerSubsystemVersion());
                 break;
             }
             case RESILIENCE_MODE_CLUSTERED:
             case RESILIENCE_MODE_STANDALONE:
             default:{
+                getLogger().trace(".deriveTargetEndpointDetails(): Is purely clustered or standalone based");
                 targetNode = topologyProxy.getNode(specifyFHIRServerProcessingPlant(), NodeElementTypeEnum.PROCESSING_PLANT, specifyFHIRServerSubsystemVersion());
             }
         }
