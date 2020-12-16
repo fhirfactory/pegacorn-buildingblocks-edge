@@ -25,7 +25,7 @@ public class PatientSearches {
         String resourceType = "Patient";
         String searchQueryName = "_query=patientQRYA19";
         // 1st, the Subject
-        String searchSubject = "subject="+ URLEncoder.encode(subjectIdentifierSystem, StandardCharsets.UTF_8) + "%7C" + URLEncoder.encode(subjectIdentifierTypeCode,StandardCharsets.UTF_8) + "%7C" + URLEncoder.encode(subjectIdentifierValue, StandardCharsets.UTF_8);
+        String searchSubject = "identifier="+ URLEncoder.encode(subjectIdentifierSystem, StandardCharsets.UTF_8) + "%7C" + URLEncoder.encode(subjectIdentifierTypeCode,StandardCharsets.UTF_8) + "%7C" + URLEncoder.encode(subjectIdentifierValue, StandardCharsets.UTF_8);
         // Now the QueryString
         String encodedQueryString = "qrya19=" + URLEncoder.encode(queryString, StandardCharsets.UTF_8);
         // URL Encode
