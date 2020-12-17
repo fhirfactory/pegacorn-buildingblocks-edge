@@ -42,6 +42,10 @@ public abstract class PegacornInternalFHIRClientServices extends PegacornInterna
     @Inject
     private BundleContentHelper bundleContentHelper;
 
+    protected BundleContentHelper getBundleContentHelper(){
+        return(bundleContentHelper);
+    }
+
     /**
      *
      * @param resourceReference
@@ -81,18 +85,17 @@ public abstract class PegacornInternalFHIRClientServices extends PegacornInterna
      * @return
      */
     public Resource findResourceByIdentifier(String resourceType, Identifier identifier){
+        getLogger().debug(".findResourceByIdentifier(): Entry, resourceType --> {}", resourceType);
         String identifierValue = identifier.getValue();
-        String identifierSystem = null;
+        String identifierSystem = identifier.getSystem();
         String identifierCode = null;
         if(identifier.hasType()) {
             CodeableConcept identifierType = identifier.getType();
             Coding identifierTypeCode = identifierType.getCodingFirstRep();
             identifierCode = identifierTypeCode.getCode();
-            identifierSystem = identifierTypeCode.getSystem();
-        } else {
-            identifierSystem = identifier.getSystem();
         }
         Resource response = findResourceByIdentifier(resourceType, identifierSystem, identifierCode, identifierValue);
+        getLogger().debug(".findResourceByIdentifier(): Exit");
         return (response);
     }
 
