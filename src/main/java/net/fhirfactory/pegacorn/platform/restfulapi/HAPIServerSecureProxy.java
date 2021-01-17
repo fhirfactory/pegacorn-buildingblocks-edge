@@ -35,6 +35,7 @@ import net.fhirfactory.pegacorn.util.PegacornProperties;
 public abstract class HAPIServerSecureProxy {
     public static final String API_KEY_HEADER_NAME = "x-api-key";
     public static final String DEFAULT_API_KEY_PROPERTY_NAME = "HAPI_API_KEY";
+    public static final int SOCKET_TIMEOUT_IN_SECS = PegacornProperties.getIntegerProperty("HAPI_SOCKET_TIMEOUT_IN_SECS", 30);
     private IGenericClient client;
 
     @Inject
@@ -57,12 +58,17 @@ public abstract class HAPIServerSecureProxy {
         return DEFAULT_API_KEY_PROPERTY_NAME;
     }
 
+    protected int getSocketTimeoutInSecs() {
+        return SOCKET_TIMEOUT_IN_SECS;
+    }
+    
     protected IGenericClient newRestfulGenericClient(String theServerBase) {
         getLogger().debug(".newRestfulGenericClient(): Entry, theServerBase --> {}", theServerBase);
         getLogger().trace(".newRestfulGenericClient(): Get the FHIRContext!");
         FhirContext contextR4 = fhirContextUtility.getFhirContext();
         getLogger().trace(".newRestfulGenericClient(): Set the ValidationMode to -NEVER-");
         contextR4.getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
+        contextR4.getRestfulClientFactory().setSocketTimeout(getSocketTimeoutInSecs() * 1000);
         getLogger().trace(".newRestfulGenericClient(): Get the Client");
         client = contextR4.newRestfulGenericClient(theServerBase);
         getLogger().trace(".newRestfulGenericClient(): Grab the API Key from the Properties");
